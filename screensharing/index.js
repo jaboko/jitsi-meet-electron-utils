@@ -1,9 +1,10 @@
 const electron = require("electron");
-module.exports = function setupScreenSharingForWindow(iframe) {
+module.exports = function setupScreenSharingForWindow(iframe, isWindow) {
     // make sure that even after reload/redirect the screensharing will be
     // available
     iframe.addEventListener('load', () => {
-        iframe.contentWindow.JitsiMeetElectron = {
+        const _window = (isWindow) ? iframe : iframe.contentWindow;
+        _window.JitsiMeetElectron = {
             /**
              * Get sources available for screensharing. The callback is invoked
              * with an array of DesktopCapturerSources.

@@ -21,8 +21,9 @@ class RemoteControl {
      *
      * @param {HTMLElement} iframe the Jitsi Meet iframe.
      */
-    constructor(iframe) {
+    constructor(iframe, isWindow) {
         this._iframe = iframe;
+        this._isWindow = isWindow;
         this._iframe.addEventListener('load', () => this._onIFrameLoad());
         /**
          * The status ("up"/"down") of the mouse button.
@@ -113,12 +114,13 @@ class RemoteControl {
      * Handles iframe load events.
      */
     _onIFrameLoad() {
-        this._iframe.contentWindow.addEventListener(
+        const _window = (this._isWindow) ? this._iframe : this._iframe.contentWindow;
+        _window.addEventListener(
             'unload',
             () => this.dispose()
         );
         this._channel = postis({
-            window: this._iframe.contentWindow,
+            window: _window,
             windowForEventListening: window,
             scope: 'jitsi-remote-control'
         });

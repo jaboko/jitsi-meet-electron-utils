@@ -57,3 +57,8 @@ typings/
 # dotenv environment variables file
 .env
 
+/.idea
+/build
+/.jshintignore
+/.jshintrc
+/package-lock.json
