@@ -1,3 +1,5 @@
+/* globals $ */
+
 const electron = require("electron");
 const postis = require("postis");
 const robot = require("robotjs");
@@ -24,7 +26,7 @@ class RemoteControl {
     constructor(iframe, isWindow) {
         this._iframe = iframe;
         this._isWindow = isWindow;
-        this._iframe.addEventListener('load', () => this._onIFrameLoad());
+        $(this._iframe).ready(() => this._onIFrameLoad());
         /**
          * The status ("up"/"down") of the mouse button.
          * FIXME: Assuming that one button at a time can be pressed. Haven't
@@ -38,7 +40,7 @@ class RemoteControl {
      * Disposes the remote control functionality.
      */
     dispose() {
-        if(this.channel) {
+        if (this.channel) {
             this._channel.destroy();
             this._channel = null;
         }
@@ -55,30 +57,30 @@ class RemoteControl {
     _start(id, sourceId) {
         const displays = electron.screen.getAllDisplays();
 
-        switch(displays.length) {
+        switch (displays.length) {
             case 0:
                 this._display = undefined;
-            break;
+                break;
             case 1:
                 // On Linux probably we'll end up here even if there are
                 // multiple monitors.
                 this._display = displays[0];
-            break;
+                break;
             // eslint-disable-next-line no-case-declarations
             default: // > 1 display
                 // Remove the type part from the sourceId
                 const parsedSourceId = sourceId.replace('screen:', '');
                 const coordinates = sourceId2Coordinates(parsedSourceId);
-                if(coordinates) {
+                if (coordinates) {
                     // Currently sourceId2Coordinates will return undefined for
                     // any OS except Windows. This code will be executed only on
                     // Windows.
                     const { x, y } = coordinates;
                     this._display
                         = electron.screen.getDisplayNearestPoint({
-                            x: x + 1,
-                            y: y + 1
-                        });
+                        x: x + 1,
+                        y: y + 1
+                    });
                 } else {
                     // On Mac OS the sourceId = 'screen' + displayId.
                     // Try to match displayId with sourceId.
@@ -93,7 +95,7 @@ class RemoteControl {
             type: 'response'
         };
 
-        if(this._display) {
+        if (this._display) {
             response.result = true;
         } else {
             response.error
@@ -115,10 +117,7 @@ class RemoteControl {
      */
     _onIFrameLoad() {
         const _window = (this._isWindow) ? this._iframe : this._iframe.contentWindow;
-        _window.addEventListener(
-            'unload',
-            () => this.dispose()
-        );
+        _window.addEventListener('unload', () => this.dispose());
         this._channel = postis({
             window: _window,
             windowForEventListening: window,
@@ -127,7 +126,7 @@ class RemoteControl {
         this._channel.ready(() => {
             this._channel.listen('message', message => {
                 const { name } = message.data;
-                if(name === REMOTE_CONTROL_MESSAGE_NAME) {
+                if (name === REMOTE_CONTROL_MESSAGE_NAME) {
                     this._onRemoteControlMessage(message);
                 }
             });
@@ -144,16 +143,16 @@ class RemoteControl {
 
         // If we haven't set the display prop. We haven't received the remote
         // control start message or there was an error associating a display.
-        if(!this._display
+        if (!this._display
             && data.type != REQUESTS.start) {
             return;
         }
-        switch(data.type) {
+        switch (data.type) {
             case EVENTS.mousemove: {
                 const { width, height, x, y } = this._display.workArea;
                 const destX = data.x * width + x;
                 const destY = data.y * height + y;
-                if(this._mouseButtonStatus === "down") {
+                if (this._mouseButtonStatus === "down") {
                     robot.dragMouse(destX, destY);
                 } else {
                     robot.moveMouse(destX, destY);
@@ -167,7 +166,7 @@ class RemoteControl {
                 robot.mouseToggle(
                     this._mouseButtonStatus,
                     (data.button
-                            ? MOUSE_BUTTONS[data.button] : undefined));
+                        ? MOUSE_BUTTONS[data.button] : undefined));
                 break;
             }
             case EVENTS.mousedblclick: {
@@ -177,9 +176,9 @@ class RemoteControl {
                     true);
                 break;
             }
-            case EVENTS.mousescroll:{
+            case EVENTS.mousescroll: {
                 //FIXME: implement horizontal scrolling
-                if(data.y !== 0) {
+                if (data.y !== 0) {
                     robot.scrollMouse(
                         Math.abs(data.y),
                         data.y > 0 ? "down" : "up"

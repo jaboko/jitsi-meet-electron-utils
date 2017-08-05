@@ -1,8 +1,10 @@
+/* globals $ */
+
 const electron = require("electron");
 module.exports = function setupScreenSharingForWindow(iframe, isWindow) {
     // make sure that even after reload/redirect the screensharing will be
     // available
-    iframe.addEventListener('load', () => {
+    $(this._iframe).ready(() => {
         const _window = (isWindow) ? iframe : iframe.contentWindow;
         _window.JitsiMeetElectron = {
             /**
